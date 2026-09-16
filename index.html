@@ -1,0 +1,1134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1.0" />
+<title>River Crossing — Logic Challenge</title>
+<style>
+:root{
+  --bg:#09121c; --panel:rgba(17,31,44,.78); --panel2:rgba(12,23,34,.9);
+  --line:rgba(255,255,255,.10); --text:#eef6ff; --muted:#9fb1c3;
+  --accent:#77d7ff; --accent2:#8cf0c2; --danger:#ff7c88; --gold:#ffd56a;
+  --shadow:0 24px 80px rgba(0,0,0,.34); --radius:22px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:
+ radial-gradient(circle at 15% 10%,rgba(86,182,240,.13),transparent 24%),
+ radial-gradient(circle at 90% 85%,rgba(93,222,172,.09),transparent 25%),
+ linear-gradient(160deg,#071019,#0c1724 55%,#08131f);color:var(--text);overflow-x:hidden;overscroll-behavior-x:none}
+body:before{content:"";position:fixed;inset:0;pointer-events:none;background:linear-gradient(120deg,transparent 0 49%,rgba(255,255,255,.018) 50%,transparent 51%);background-size:180px 180px;opacity:.7}
+button{font:inherit}
+.hidden{display:none!important}
+.app{min-height:100vh;position:relative}
+.topbar{height:68px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;border-bottom:1px solid var(--line);backdrop-filter:blur(16px);position:sticky;top:0;z-index:30;background:rgba(6,13,21,.70)}
+.brand{display:flex;align-items:center;gap:12px;font-weight:800;letter-spacing:.2px}
+.logo{width:38px;height:38px;border-radius:12px;background:linear-gradient(145deg,#8de7ff,#5da7ff);box-shadow:0 8px 26px rgba(55,184,255,.28);display:grid;place-items:center;position:relative;overflow:hidden}
+.logo:before,.logo:after{content:"";position:absolute;border:2px solid rgba(255,255,255,.75);border-radius:50%}
+.logo:before{width:22px;height:10px;transform:rotate(-12deg)}
+.logo:after{width:10px;height:22px;transform:rotate(-12deg)}
+.top-actions{display:flex;gap:8px;align-items:center}
+.icon-btn,.ghost-btn,.primary-btn,.danger-btn{border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--text);border-radius:13px;padding:10px 14px;cursor:pointer;transition:.2s ease;box-shadow:inset 0 1px 0 rgba(255,255,255,.04)}
+.icon-btn:hover,.ghost-btn:hover{transform:translateY(-1px);background:rgba(255,255,255,.07)}
+.primary-btn{background:linear-gradient(135deg,#74d6ff,#5c9cff);border-color:transparent;color:#06111b;font-weight:800;box-shadow:0 12px 30px rgba(75,173,255,.26)}
+.primary-btn:hover{transform:translateY(-1px);filter:brightness(1.06)}
+.danger-btn{background:rgba(255,102,115,.10);border-color:rgba(255,102,115,.24);color:#ffdfe2}
+.screen{padding:30px 22px 50px;max-width:1320px;margin:0 auto}
+.hero{min-height:calc(100vh - 110px);display:grid;place-items:center}
+.hero-inner{width:min(1100px,100%);display:grid;grid-template-columns:1.25fr .95fr;gap:28px;align-items:center}
+.hero-copy h1{font-size:clamp(48px,7vw,92px);line-height:.92;margin:0 0 22px;letter-spacing:-.065em}
+.hero-copy p{font-size:18px;color:var(--muted);max-width:610px;line-height:1.6;margin:0 0 28px}
+.hero-actions{display:flex;gap:12px;flex-wrap:wrap}
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:24px;max-width:620px}
+.stat{padding:16px 18px;border:1px solid var(--line);border-radius:18px;background:rgba(255,255,255,.03)}
+.stat .v{font-size:26px;font-weight:850}.stat .k{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin-top:4px}
+.hero-art{min-height:500px;border:1px solid var(--line);border-radius:32px;background:
+ linear-gradient(180deg,rgba(120,202,255,.08),rgba(34,84,112,.04)),
+ radial-gradient(circle at 50% 10%,rgba(255,255,255,.07),transparent 30%),
+ rgba(8,18,28,.74);box-shadow:var(--shadow);position:relative;overflow:hidden}
+.sky-stars{position:absolute;inset:0;background-image:radial-gradient(circle,rgba(255,255,255,.50) 0 1px,transparent 1.3px);background-size:72px 72px;opacity:.13}
+.land{position:absolute;bottom:0;height:44%;width:52%;background:linear-gradient(180deg,#16382c,#11251f);border-radius:50% 50% 0 0;filter:drop-shadow(0 -10px 25px rgba(0,0,0,.18))}
+.land.left{left:-8%;transform:rotate(2deg)} .land.right{right:-8%;transform:scaleX(-1) rotate(2deg)}
+.river-art{position:absolute;left:31%;right:31%;bottom:0;height:67%;background:
+ repeating-linear-gradient(168deg,rgba(255,255,255,.08) 0 2px,transparent 2px 24px),
+ linear-gradient(180deg,#2b8fb6,#155f87 60%,#0d496a);clip-path:polygon(17% 0,83% 0,100% 100%,0 100%);animation:flow 7s linear infinite}
+@keyframes flow{to{background-position:0 48px,0 0}}
+.dock{position:absolute;bottom:26%;width:94px;height:16px;background:#754f37;border-radius:6px;box-shadow:0 7px 12px rgba(0,0,0,.25)}
+.dock.left{left:22%}.dock.right{right:22%}
+.boat-art{position:absolute;bottom:29%;left:50%;transform:translateX(-50%);width:170px;height:84px;background:linear-gradient(180deg,#b97b4c,#6b432d);clip-path:polygon(8% 20%,92% 20%,78% 84%,22% 84%);filter:drop-shadow(0 14px 16px rgba(0,0,0,.24));animation:float 3s ease-in-out infinite}
+@keyframes float{50%{transform:translateX(-50%) translateY(-7px)}}
+.art-person{position:absolute;bottom:31%;width:62px;height:120px}
+.art-person.p1{left:39%}.art-person.p2{left:45%}.art-person.p3{left:51%}.art-person.p4{left:57%}
+.person-svg{width:100%;height:100%;filter:drop-shadow(0 9px 8px rgba(0,0,0,.28))}
+.footer-note{text-align:center;color:#7f95aa;font-size:12px;margin-top:26px}
+
+.section-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-end;margin-bottom:20px}
+.section-head h2{margin:0;font-size:32px;letter-spacing:-.03em}.section-head p{margin:4px 0 0;color:var(--muted)}
+.level-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px}
+.level-card{border:1px solid var(--line);border-radius:22px;padding:18px;background:linear-gradient(160deg,rgba(255,255,255,.055),rgba(255,255,255,.02));min-height:195px;position:relative;overflow:hidden;transition:.22s ease}
+.level-card:hover{transform:translateY(-3px);border-color:rgba(126,221,255,.28)}
+.level-card.locked{opacity:.48}.level-card.completed{box-shadow:inset 0 0 0 1px rgba(140,240,194,.14)}
+.lvl-no{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.14em}.lvl-title{font-size:18px;font-weight:800;margin:10px 0 8px}.lvl-desc{font-size:13px;line-height:1.45;color:var(--muted);min-height:57px}
+.lvl-foot{position:absolute;left:18px;right:18px;bottom:16px;display:flex;justify-content:space-between;align-items:center}
+.stars{letter-spacing:2px;color:#506274}.stars .on{color:var(--gold)} .best{font-size:12px;color:#93a9bb}
+.level-card button{position:absolute;inset:0;border:0;background:transparent;cursor:pointer}
+
+.how{max-width:860px;margin:0 auto}.how-card{padding:24px;border:1px solid var(--line);border-radius:24px;background:var(--panel);box-shadow:var(--shadow);margin-bottom:14px}.how-card h3{margin:0 0 8px}.how-card p{margin:0;color:var(--muted);line-height:1.65}
+.settings-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;max-width:850px}.setting-card{padding:20px;border:1px solid var(--line);border-radius:22px;background:var(--panel);display:flex;justify-content:space-between;align-items:center}.setting-card strong{display:block}.setting-card span{display:block;color:var(--muted);font-size:13px;margin-top:5px}
+.toggle{width:54px;height:30px;border-radius:999px;background:#284052;position:relative;cursor:pointer;transition:.2s}.toggle:after{content:"";width:24px;height:24px;background:#eaf7ff;border-radius:50%;position:absolute;top:3px;left:3px;transition:.2s}.toggle.on{background:#4dbfe1}.toggle.on:after{left:27px}
+
+.game-wrap{display:grid;grid-template-columns:1fr 300px;gap:16px}
+.game-main{min-width:0}
+.game-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;margin-bottom:14px}.game-head h2{margin:0;font-size:30px}.game-head p{margin:5px 0 0;color:var(--muted)}.metric-row{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}.metric{border:1px solid var(--line);border-radius:14px;padding:10px 12px;background:rgba(255,255,255,.035);min-width:86px;text-align:center}.metric b{display:block;font-size:18px}.metric small{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
+.board{min-height:530px;border:1px solid var(--line);border-radius:28px;overflow:hidden;position:relative;background:#1b3f31;box-shadow:var(--shadow)}
+.board.night{background:#091a2c}
+.board .sky{position:absolute;inset:0 0 48%;background:linear-gradient(180deg,#6ab2d9,#d7eaf0);z-index:0}.board.night .sky{background:linear-gradient(180deg,#0e1a35,#142849)}
+.sun,.moon{position:absolute;top:34px;right:40px;width:72px;height:72px;border-radius:50%;background:#ffeab1;box-shadow:0 0 50px rgba(255,234,177,.35);z-index:1}.board.night .sun{display:none}.moon{display:none;background:#e6efff;box-shadow:0 0 45px rgba(230,239,255,.26)}.board.night .moon{display:block}
+.stars-bg{display:none;position:absolute;inset:0 0 48%;background-image:radial-gradient(circle,rgba(255,255,255,.8) 0 1px,transparent 1.4px);background-size:70px 62px;opacity:.35}.board.night .stars-bg{display:block}
+.trees{position:absolute;left:0;right:0;bottom:42%;height:23%;z-index:2;opacity:.95;background:
+ radial-gradient(circle at 6% 55%,#184b34 0 34px,transparent 35px),
+ radial-gradient(circle at 12% 40%,#184b34 0 49px,transparent 50px),
+ radial-gradient(circle at 22% 56%,#22553a 0 44px,transparent 45px),
+ radial-gradient(circle at 80% 51%,#17442f 0 42px,transparent 43px),
+ radial-gradient(circle at 89% 36%,#214e35 0 56px,transparent 57px),
+ radial-gradient(circle at 96% 58%,#19442e 0 38px,transparent 39px)}
+.river{position:absolute;left:23%;right:23%;bottom:0;height:54%;z-index:3;background:
+ repeating-linear-gradient(174deg,rgba(255,255,255,.10) 0 2px,transparent 2px 24px),
+ linear-gradient(180deg,#2586ad,#166080 62%,#0e4764);clip-path:polygon(6% 0,94% 0,100% 100%,0 100%);animation:flow 8s linear infinite}
+.bank{position:absolute;bottom:0;height:48%;width:27%;z-index:4;background:
+ radial-gradient(circle at 20% 25%,rgba(255,255,255,.045) 0 1px,transparent 2px),linear-gradient(180deg,#2a583d,#1d3f2e)}
+.bank.left{left:0;border-top-right-radius:45%}.bank.right{right:0;border-top-left-radius:45%}
+.shore{position:absolute;bottom:34%;width:20px;height:80px;border-radius:6px;background:#8a6040;z-index:7;box-shadow:8px 6px 0 rgba(0,0,0,.12)}.shore.left{left:24%}.shore.right{right:24%}
+.boat{position:absolute;width:130px;height:64px;background:linear-gradient(180deg,#ba804c,#6b432c);clip-path:polygon(3% 17%,97% 17%,80% 86%,20% 86%);z-index:11;transition:left .65s ease,bottom .65s ease,transform .65s ease;filter:drop-shadow(0 9px 8px rgba(0,0,0,.25))}
+.boat .rim{position:absolute;left:11%;right:11%;top:9px;height:9px;background:#d59a5e;border-radius:8px}.boat.small{width:116px}.boat.large{width:158px;height:70px}
+.boat.pass{transform:translateX(70%)}
+.char-layer{position:absolute;inset:0;z-index:12;pointer-events:none}
+.character{position:absolute;width:78px;height:120px;cursor:pointer;pointer-events:auto;transition:left .55s cubic-bezier(.2,.8,.2,1),bottom .55s cubic-bezier(.2,.8,.2,1),transform .2s;z-index:14}
+.character:hover{transform:translateY(-4px)}
+.character.selected{filter:drop-shadow(0 0 14px rgba(119,215,255,.9))}
+.character.good-character .char-svg{filter:drop-shadow(0 0 5px rgba(57,217,138,.34)) drop-shadow(0 8px 7px rgba(0,0,0,.2))}
+.character.bad-character .char-svg{filter:drop-shadow(0 0 5px rgba(255,88,102,.34)) drop-shadow(0 8px 7px rgba(0,0,0,.2))}
+
+.character .tag{position:absolute;left:50%;top:-16px;transform:translateX(-50%);font-size:10px;white-space:nowrap;background:rgba(5,13,20,.86);border:1px solid var(--line);padding:4px 7px;border-radius:999px;opacity:0;transition:.2s}.character:hover .tag,.character.selected .tag{opacity:1}
+.char-svg{width:100%;height:100%;filter:drop-shadow(0 8px 7px rgba(0,0,0,.2))}
+.boat-passengers{position:absolute;z-index:15;display:flex;gap:2px;left:50%;transform:translateX(-50%);bottom:44%;pointer-events:none}.boat-passengers .mini{width:31px;height:50px}.mini svg{width:100%;height:100%}
+.board-overlay{position:absolute;inset:0;z-index:20;pointer-events:none;background:linear-gradient(180deg,transparent 68%,rgba(0,0,0,.17))}
+.light-ring{position:absolute;width:380px;height:380px;border-radius:50%;background:radial-gradient(circle,rgba(255,244,193,.27),rgba(255,244,193,.08) 35%,transparent 70%);z-index:13;pointer-events:none;transform:translate(-50%,-50%);display:none}.board.night .light-ring{display:block}
+.hazard-bar{position:absolute;left:50%;top:16px;transform:translateX(-50%);z-index:20;padding:7px 12px;border-radius:999px;background:rgba(7,14,22,.76);border:1px solid var(--line);font-size:11px;letter-spacing:.08em;text-transform:uppercase}
+.game-side{border:1px solid var(--line);border-radius:24px;background:var(--panel);padding:16px;height:max-content;position:sticky;top:84px}.side-section{padding-bottom:15px;margin-bottom:15px;border-bottom:1px solid var(--line)}.side-section:last-child{border-bottom:0;margin-bottom:0;padding-bottom:0}
+.side-section h3{margin:0 0 10px;font-size:13px;text-transform:uppercase;letter-spacing:.12em;color:#a8bbc9}.side-section p{font-size:13px;line-height:1.55;color:var(--muted);margin:0}
+.rule-list{margin:0;padding-left:16px;color:var(--muted);font-size:13px;line-height:1.55}.controls{display:grid;gap:8px}.controls .primary-btn,.controls .ghost-btn,.controls .danger-btn{width:100%}
+.selected-list{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.pill{font-size:11px;padding:6px 8px;border-radius:999px;background:rgba(119,215,255,.10);border:1px solid rgba(119,215,255,.18)}
+.energy-track{height:9px;background:#223545;border-radius:999px;overflow:hidden}.energy-fill{height:100%;background:linear-gradient(90deg,#75f0c1,#77d7ff);border-radius:999px;transition:.25s}
+.danger{color:#ff9aa4}.safe{color:#8ef0cb}
+
+.modal{position:fixed;inset:0;background:rgba(1,6,10,.72);backdrop-filter:blur(10px);display:grid;place-items:center;z-index:100;padding:20px}.modal-card{width:min(520px,100%);background:#0d1b28;border:1px solid var(--line);border-radius:28px;padding:30px;box-shadow:0 30px 100px rgba(0,0,0,.5);text-align:center}.modal-card h2{font-size:38px;margin:0 0 8px;letter-spacing:-.04em}.modal-card p{color:var(--muted);line-height:1.6}.modal-actions{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:20px}.score-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:18px}.score-box{padding:13px;border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,.03)}.score-box b{font-size:20px}.score-box small{display:block;color:var(--muted);margin-top:3px}
+.intro-rules{display:grid;gap:8px;text-align:left;margin-top:15px}.intro-rules div{padding:10px 12px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.025);font-size:13px;color:#c8d7e3}
+
+.player-setup-form{display:grid;gap:11px;text-align:left;margin-top:18px}.player-setup-form label{font-size:11px;color:#9fb1c3;text-transform:uppercase;letter-spacing:.12em}.player-setup-form input{width:100%;padding:14px 15px;border-radius:14px;border:1px solid var(--line);background:#09141f;color:var(--text);outline:none}.player-setup-form input:focus{border-color:rgba(119,215,255,.55);box-shadow:0 0 0 3px rgba(119,215,255,.09)}
+.toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,20px);padding:12px 16px;border-radius:14px;background:#09141f;border:1px solid var(--line);box-shadow:0 18px 40px rgba(0,0,0,.28);opacity:0;pointer-events:none;z-index:200;transition:.25s}.toast.show{opacity:1;transform:translate(-50%,0)}
+.kbd{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;padding:2px 5px;border-radius:5px;background:rgba(255,255,255,.06);border:1px solid var(--line)}
+
+.good-character{--team:#39d98a;--team-soft:rgba(57,217,138,.18);--team-border:rgba(57,217,138,.55)}
+.bad-character{--team:#ff5866;--team-soft:rgba(255,88,102,.18);--team-border:rgba(255,88,102,.55)}
+.team-badge{position:absolute;left:50%;bottom:-2px;transform:translateX(-50%);z-index:18;white-space:nowrap;
+  font-size:9px;font-weight:850;letter-spacing:.09em;text-transform:uppercase;padding:3px 7px;border-radius:999px;
+  background:var(--team-soft);border:1px solid var(--team-border);color:var(--team);backdrop-filter:blur(5px)}
+.character.good-character .tag{border-color:rgba(57,217,138,.30)}
+.character.bad-character .tag{border-color:rgba(255,88,102,.30)}
+.team-legend{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.legend-item{display:flex;align-items:center;gap:7px;padding:6px 9px;border:1px solid var(--line);border-radius:999px;background:rgba(255,255,255,.03);font-size:11px}
+.legend-dot{width:9px;height:9px;border-radius:50%}.legend-good{background:#39d98a;box-shadow:0 0 9px rgba(57,217,138,.42)}
+.legend-bad{background:#ff5866;box-shadow:0 0 9px rgba(255,88,102,.40)}
+
+
+/* Mobile-first gameplay improvements */
+.game-wrap{align-items:start}
+.game-main{min-width:0;width:100%}.game-main,.game-side{pointer-events:auto}
+.game-side{width:100%}
+.board{
+  width:100%;
+  aspect-ratio:16/9;
+  min-height:520px;
+  max-height:min(68vh,700px);
+  touch-action:manipulation;
+}
+.character{
+  min-width:68px;
+  min-height:108px;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
+}
+.character .tag{font-size:10px}
+.character:active{transform:translateY(-3px) scale(.98)}
+.primary-btn,.ghost-btn,.danger-btn,.icon-btn{
+  min-height:44px;
+  -webkit-tap-highlight-color:transparent;
+}
+.modal{padding:12px}
+.modal-card{max-height:90vh;overflow:auto}
+
+/* Stable pointer targets: decorative character layers never steal the click. */
+.character,
+.character *{touch-action:manipulation;-webkit-user-select:none;user-select:none}
+.character .char-svg,
+.character .char-svg *,
+.character .tag,
+.character .team-badge{pointer-events:none}
+.character{cursor:pointer;z-index:30}
+.game-side button{position:relative;z-index:40;pointer-events:auto;cursor:pointer}
+.game-side .controls button,
+.game-side .side-section button{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+
+@media (max-width:1100px){
+  .game-wrap{grid-template-columns:1fr}
+  .game-side{
+    position:static;
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:12px;
+    padding:14px;
+  }
+  .game-side .side-section{
+    margin:0;
+    padding:12px;
+    border:1px solid var(--line);
+    border-radius:18px;
+    background:rgba(255,255,255,.025);
+  }
+  .game-side .side-section.controls{
+    grid-column:1/-1;
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+  }
+}
+@media (max-width:760px){
+  .top-actions .icon-btn{display:block!important;padding:9px 10px}
+}
+@media (max-width:760px){
+  .topbar{height:60px}
+  .brand span{font-size:14px}
+  .top-actions{gap:5px}
+  .top-actions .ghost-btn:nth-child(1),
+  .top-actions .ghost-btn:nth-child(2){display:none}
+  .screen{padding:16px 10px 28px}
+  .section-head{align-items:flex-start}
+  .section-head h2{font-size:26px}
+  .section-head p{font-size:13px}
+  .hero{min-height:calc(100vh - 82px);padding-top:20px}
+  .hero-inner{gap:16px}
+  .hero-copy h1{font-size:clamp(42px,13vw,62px)}
+  .hero-copy p{font-size:15px;line-height:1.5}
+  .hero-art{min-height:270px;border-radius:24px}
+  .stats-row{grid-template-columns:repeat(3,1fr);gap:7px}
+  .stat{padding:12px 8px;border-radius:15px}
+  .stat .v{font-size:20px}
+  .stat .k{font-size:9px}
+  .game-head{gap:8px}
+  .game-head h2{font-size:22px}
+  .metric-row{display:grid;grid-template-columns:repeat(3,1fr);width:100%;gap:6px}
+  .metric{min-width:0;padding:9px 6px;border-radius:12px}
+  .metric b{font-size:16px}
+  .metric small{font-size:8px}
+  .board{
+    aspect-ratio:auto;
+    height:62vh;
+    min-height:440px;
+    max-height:640px;
+    border-radius:22px;
+  }
+  .game-side{
+    grid-template-columns:1fr;
+    gap:9px;
+    padding:10px;
+  }
+  .game-side .side-section{
+    padding:11px;
+    border-radius:16px;
+  }
+  .game-side .side-section.controls{
+    grid-column:auto;
+    grid-template-columns:1fr;
+  }
+  .controls .primary-btn,.controls .ghost-btn,.controls .danger-btn{
+    width:100%;
+  }
+  .team-legend{gap:5px}
+  .legend-item{font-size:10px;padding:5px 8px}
+  .character{
+    width:62px;
+    height:101px;
+  }
+  .character .tag{
+    top:-12px;
+    font-size:8px;
+    padding:3px 5px;
+  }
+  .team-badge{
+    font-size:8px;
+    padding:3px 5px;
+  }
+  .boat{width:100px;height:56px}
+  .boat.small{width:92px}
+  .boat.large{width:128px;height:62px}
+  .boat-passengers .mini{width:25px;height:42px}
+  .shore{height:65px}
+  .hero-actions{gap:8px}
+  .hero-actions .primary-btn,.hero-actions .ghost-btn{flex:1 1 calc(50% - 8px)}
+  .level-grid{grid-template-columns:1fr 1fr;gap:9px}
+  .level-card{min-height:180px;padding:14px}
+  .lvl-title{font-size:15px}
+  .lvl-desc{font-size:12px;min-height:62px}
+  .lvl-foot{left:14px;right:14px;bottom:12px}
+  .settings-grid{grid-template-columns:1fr}
+  .modal-card{padding:22px 16px;border-radius:22px}
+  .modal-card h2{font-size:30px}
+}
+@media (max-width:430px){
+  .topbar{padding:0 8px}
+  .brand{gap:8px}
+  .logo{width:34px;height:34px;border-radius:10px}
+  .hero-copy h1{font-size:46px}
+  .hero-art{min-height:240px}
+  .stats-row{grid-template-columns:1fr 1fr 1fr}
+  .board{height:58vh;min-height:410px}
+  .character{width:56px;height:94px}
+  .character .tag{display:none}
+  .team-badge{font-size:7px}
+  .river{left:20%;right:20%}
+  .bank.left,.bank.right{width:25%}
+  .shore.left{left:21%}.shore.right{right:21%}
+  .boat{width:90px}.boat.large{width:116px}
+  .level-grid{grid-template-columns:1fr}
+  .level-card{min-height:165px}
+}
+@media (orientation:landscape) and (max-width:900px) and (max-height:600px){
+  .topbar{height:52px}
+  .screen{padding-top:10px}
+  .board{
+    height:calc(100vh - 190px);
+    min-height:330px;
+    max-height:none;
+  }
+  .game-side{grid-template-columns:repeat(2,1fr)}
+  .game-side .side-section.controls{
+    grid-column:1/-1;
+    grid-template-columns:repeat(3,1fr);
+  }
+}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
+
+@media (max-width:1100px){.level-grid{grid-template-columns:repeat(3,1fr)}.game-wrap{grid-template-columns:1fr}.game-side{position:static}.hero-inner{grid-template-columns:1fr}.hero-art{min-height:390px}.settings-grid{grid-template-columns:1fr}}
+@media (max-width:700px){.screen{padding:20px 12px 40px}.topbar{padding:0 12px}.top-actions .label{display:none}.hero-copy h1{font-size:56px}.hero-art{min-height:330px}.level-grid{grid-template-columns:1fr}.stats-row{grid-template-columns:1fr}.metric-row{justify-content:flex-start}.game-head{flex-direction:column}.board{min-height:500px}.character{width:68px;height:108px}.shore.left{left:22%}.shore.right{right:22%}.river{left:19%;right:19%}.bank.left,.bank.right{width:24%}.boat{width:106px}.boat.large{width:140px}.dock{display:none}}
+</style>
+</head>
+<body>
+<div class="app">
+<header class="topbar">
+  <div class="brand"><div class="logo"></div><span>River Crossing</span></div>
+  <div class="top-actions">
+    <button class="ghost-btn" id="navLevels">Levels</button>
+    <button class="ghost-btn" id="navHow">How to Play</button>
+    <button class="ghost-btn" id="navRanking">Ranking</button>
+    <button class="icon-btn" id="navSettings">Settings</button>
+  </div>
+</header>
+
+<main id="screen-menu" class="screen hero">
+  <div class="hero-inner">
+    <section class="hero-copy">
+      <div class="lvl-no">Logic Challenge · 10 levels</div>
+      <h1>Can you get everyone across?</h1>
+      <p>A polished 2D river-crossing adventure built around state validation, resource management and progressively harder logic.</p>
+      <div class="hero-actions">
+        <button class="primary-btn" id="playBtn">PLAY</button>
+        <button class="ghost-btn" id="levelsBtn">LEVELS</button>
+        <button class="ghost-btn" id="howBtn">HOW TO PLAY</button>
+      </div>
+      <div style="margin-top:16px;display:flex;align-items:center;gap:10px">
+      <span style="color:var(--muted);font-size:12px">Player</span>
+      <strong id="menuPlayerName">Not set</strong>
+    </div>
+    <div class="stats-row">
+        <div class="stat"><div class="v" id="menuCurrent">1</div><div class="k">Current level</div></div>
+        <div class="stat"><div class="v" id="menuCompleted">0/10</div><div class="k">Completed</div></div>
+        <div class="stat"><div class="v" id="menuStars">0</div><div class="k">Stars earned</div></div>
+      </div>
+    </section>
+    <section class="hero-art">
+      <div class="sky-stars"></div><div class="land left"></div><div class="land right"></div>
+      <div class="river-art"></div><div class="dock left"></div><div class="dock right"></div>
+      <div class="boat-art"></div>
+      <div class="art-person p1"><svg class="person-svg" viewBox="0 0 80 140"><circle cx="40" cy="25" r="17" fill="#c98d6b"/><path d="M22 26c2-17 33-25 40 0-7-7-28-9-40 0Z" fill="#24333d"/><path d="M26 47c8-4 20-4 28 0l9 48H17z" fill="#4e9e8f"/><path d="M27 95h10v34H28zM43 95h10v34H43z" fill="#243747"/><path d="M28 127h10v6H25zM43 127h10v6H40z" fill="#d1d7d9"/></svg></div>
+      <div class="art-person p2"><svg class="person-svg" viewBox="0 0 80 140"><circle cx="40" cy="25" r="17" fill="#ad745a"/><path d="M22 21c7-20 32-18 39 4-9-6-27-9-39-4Z" fill="#8a5b39"/><path d="M27 46c7-4 19-4 26 0l10 48H17z" fill="#7c91ad"/><path d="M29 93h9v36h-9zM43 93h9v36h-9z" fill="#4a5668"/><path d="M29 127h9v6H26zM43 127h9v6H40z" fill="#d1d7d9"/></svg></div>
+      <div class="art-person p3"><svg class="person-svg" viewBox="0 0 80 140"><circle cx="40" cy="25" r="17" fill="#d49c76"/><path d="M21 27c2-21 32-25 41-2-10-5-27-8-41 2Z" fill="#1f252b"/><path d="M27 45c8-4 20-4 27 0l11 50H15z" fill="#bf7954"/><path d="M28 95h10v34H28zM43 95h10v34H43z" fill="#293847"/><path d="M28 127h10v6H25zM43 127h10v6H40z" fill="#d1d7d9"/></svg></div>
+      <div class="art-person p4"><svg class="person-svg" viewBox="0 0 80 140"><circle cx="40" cy="25" r="17" fill="#8f5d49"/><path d="M20 27c1-17 30-24 41-5-12-4-27-5-41 5Z" fill="#161c25"/><path d="M27 45c8-4 20-4 27 0l10 49H16z" fill="#8d9e77"/><path d="M28 94h10v35H28zM43 94h10v35H43z" fill="#39435a"/><path d="M28 127h10v6H25zM43 127h10v6H40z" fill="#d1d7d9"/></svg></div>
+    </section>
+  </div>
+</main>
+
+<section id="screen-levels" class="screen hidden">
+  <div class="section-head"><div><div class="lvl-no">Progress</div><h2>Choose a challenge</h2><p>Complete a level to unlock the next one.</p></div><button class="ghost-btn" id="levelsBack">Back</button></div>
+  <div class="level-grid" id="levelGrid"></div>
+</section>
+
+<section id="screen-how" class="screen hidden">
+  <div class="section-head"><div><div class="lvl-no">Rules</div><h2>How to Play</h2><p>Every action is checked by the puzzle engine.</p></div><button class="ghost-btn" id="howBack">Back</button></div>
+  <div class="how">
+    <div class="how-card"><h3>1 · Select, then act</h3><p>Click or tap characters to select them. The game prevents invalid capacity or side selections. Confirm a crossing only when you are happy with the state.</p></div>
+    <div class="how-card"><h3>2 · Think about the state, not just the move</h3><p>After every crossing, both banks are validated. Dangerous combinations can fail even when the boat movement itself is legal.</p></div>
+    <div class="how-card"><h3>3 · Hints are progressive</h3><p>Each level gives three hints. The first is broad, the second is more specific, and the third is intentionally close to the solution without automatically playing it for you.</p></div>
+    <div class="how-card"><h3>4 · Score for efficiency</h3><p>Moves, time, mistakes, hints, and remaining resources all affect the star rating. Best performance is saved locally in your browser.</p></div>
+    <div class="how-card"><h3>5 · Controls</h3><p><span class="kbd">R</span> restarts the current level. <span class="kbd">Esc</span> opens the menu. On supported levels, you can also use keyboard focus and Enter.</p></div>
+  </div>
+</section>
+
+<section id="screen-settings" class="screen hidden">
+  <div class="section-head"><div><div class="lvl-no">Preferences</div><h2>Settings</h2><p>Change your player name, sound and other preferences.</p></div><button class="ghost-btn" id="settingsBack">Back</button></div>
+  <div class="settings-grid">
+    <div class="setting-card"><div><strong>Sound effects</strong><span>Buttons, crossings, warnings and victories.</span></div><div class="toggle on" id="soundToggle"></div></div>
+    <div class="setting-card"><div><strong>Ambient music</strong><span>Light background ambience when enabled.</span></div><div class="toggle" id="musicToggle"></div></div>
+    <div class="setting-card"><div><strong>Reduced motion</strong><span>Minimizes non-essential animation.</span></div><div class="toggle" id="motionToggle"></div></div>
+    <div class="setting-card"><div><strong>Player name</strong><span id="playerNameSettingValue">Not set</span></div><button class="primary-btn" id="changePlayerName">CHANGE NAME</button></div>
+    <div class="setting-card"><div><strong>Reset progress</strong><span>Clears unlocked levels, stars and best results.</span></div><button class="danger-btn" id="resetProgress">RESET ALL PROGRESS</button></div>
+  </div>
+</section>
+
+
+<section id="screen-ranking" class="screen hidden">
+  <div class="section-head">
+    <div><div class="lvl-no">Global Leaderboard</div><h2>Ranking</h2><p>Scores are saved online and ranked by your selected strategy.</p></div>
+    <button class="ghost-btn" id="rankingBack">Back</button>
+  </div>
+  <div class="how">
+    <div class="how-card">
+      <div class="hero-actions" style="justify-content:space-between;align-items:center">
+        <div>
+          <h3 style="margin:0 0 5px">Overall Ranking</h3>
+          <p style="margin:0">Best result from each completed level is counted.</p>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="primary-btn" id="rankNormalBtn">Normal</button>
+          <button class="ghost-btn" id="rankMoveBtn">Move</button>
+          <button class="ghost-btn" id="rankRefreshBtn">Refresh</button>
+        </div>
+      </div>
+    </div>
+    <div class="how-card" style="padding:12px;overflow:auto">
+      <div id="rankingStatus" style="padding:10px 8px;color:var(--muted);font-size:13px">Loading leaderboard…</div>
+      <table style="width:100%;border-collapse:collapse;min-width:680px">
+        <thead><tr>
+          <th style="text-align:left;padding:10px;color:#91a7b9;font-size:11px;text-transform:uppercase;letter-spacing:.12em">Rank</th>
+          <th style="text-align:left;padding:10px;color:#91a7b9;font-size:11px;text-transform:uppercase;letter-spacing:.12em">Player</th>
+          <th style="text-align:right;padding:10px;color:#91a7b9;font-size:11px;text-transform:uppercase;letter-spacing:.12em">Levels</th>
+          <th style="text-align:right;padding:10px;color:#91a7b9;font-size:11px;text-transform:uppercase;letter-spacing:.12em">Hints</th>
+          <th style="text-align:right;padding:10px;color:#91a7b9;font-size:11px;text-transform:uppercase;letter-spacing:.12em">Time</th>
+          <th style="text-align:right;padding:10px;color:#91a7b9;font-size:11px;text-transform:uppercase;letter-spacing:.12em">Moves</th>
+          <th style="text-align:right;padding:10px;color:#91a7b9;font-size:11px;text-transform:uppercase;letter-spacing:.12em">Stars</th>
+        </tr></thead>
+        <tbody id="rankingBody"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section id="screen-intro" class="screen hidden"></section>
+<section id="screen-game" class="screen hidden"></section>
+
+<div class="modal hidden" id="playerSetupModal"></div>
+<div class="modal hidden" id="modal"></div>
+<div class="toast" id="toast"></div>
+</div>
+
+<script>
+const levels = [
+  {
+    id:1,title:"The First Crossing",kind:"people",desc:"Move 3 Good People and 3 Bad People across safely.",
+    chars:[
+      {id:"g1",name:"Ari",label:"Good 1",group:"good",tone:"#4e9e8f",hair:"#24333d"},
+      {id:"g2",name:"Mina",label:"Good 2",group:"good",tone:"#7c91ad",hair:"#8a5b39"},
+      {id:"g3",name:"Noah",label:"Good 3",group:"good",tone:"#bf7954",hair:"#1f252b"},
+      {id:"b1",name:"Rex",label:"Bad 1",group:"bad",tone:"#8d9e77",hair:"#161c25"},
+      {id:"b2",name:"Vex",label:"Bad 2",group:"bad",tone:"#985b65",hair:"#352736"},
+      {id:"b3",name:"Zane",label:"Bad 3",group:"bad",tone:"#6d7898",hair:"#222633"}
+    ],
+    capacity:2, energy:null, theme:"day",
+    rules:["Boat carries at most 2 people.","If Good People are present on a bank, Bad People may not outnumber them.","All 6 people must reach the right bank."],
+    hints:["Think about who can safely be left behind.","Keep both banks safe after every return trip.","A safe solution needs more than one strategic return."],
+    validator:"goodbad", scoreBase:1000
+  },
+  {
+    id:2,title:"Wolf, Goat & Cabbage",kind:"farmer",desc:"Transport the farmer, wolf, goat and cabbage without leaving a dangerous pair.",
+    chars:[
+      {id:"farmer",name:"Farmer",label:"Farmer",group:"farmer",tone:"#6d9dcf",hair:"#4b3428"},
+      {id:"wolf",name:"Wolf",label:"Wolf",group:"animal",animal:"wolf"},
+      {id:"goat",name:"Goat",label:"Goat",group:"animal",animal:"goat"},
+      {id:"cabbage",name:"Cabbage",label:"Cabbage",group:"item",item:true}
+    ],
+    capacity:2, theme:"day", validator:"farmer", scoreBase:1000,
+    rules:["Boat carries the Farmer + one passenger.","Wolf cannot stay with Goat unless the Farmer is present.","Goat cannot stay with Cabbage unless the Farmer is present.","Get all four to the right bank."],
+    hints:["The farmer cannot leave every pair alone.","The goat is the piece that interacts with both threats.","Take the goat first."]
+  },
+  {
+    id:3,title:"Bridge & Torch",kind:"bridge",desc:"Four people cross a bridge at night using one torch.",
+    chars:[
+      {id:"a",name:"Ari",label:"1 sec",time:1,tone:"#4e9e8f",hair:"#24333d"},
+      {id:"b",name:"Mina",label:"2 sec",time:2,tone:"#7c91ad",hair:"#8a5b39"},
+      {id:"c",name:"Noah",label:"5 sec",time:5,tone:"#bf7954",hair:"#1f252b"},
+      {id:"d",name:"Vex",label:"10 sec",time:10,tone:"#8d9e77",hair:"#161c25"}
+    ],
+    capacity:2,targetTime:19,theme:"night",validator:"bridge",scoreBase:1200,
+    rules:["At most two people cross at once.","The torch must be on the side of the crossing pair.","A pair takes the slower person's time.","Target time: 19 seconds."],
+    hints:["The fastest walkers are valuable for torch returns.","Do not use the slowest pair as a default.","The classic minimum is achieved by pairing 1 & 2 for the important returns."]
+  },
+  {
+    id:4,title:"Jealous Husbands",kind:"people",desc:"Move three couples across without any wife being left with another man without her husband.",
+    chars:[
+      {id:"h1",name:"Husband A",label:"Husband A",group:"husband",couple:"A",tone:"#4e9e8f",hair:"#24333d"},
+      {id:"h2",name:"Husband B",label:"Husband B",group:"husband",couple:"B",tone:"#7c91ad",hair:"#8a5b39"},
+      {id:"h3",name:"Husband C",label:"Husband C",group:"husband",couple:"C",tone:"#bf7954",hair:"#1f252b"},
+      {id:"w1",name:"Wife A",label:"Wife A",group:"wife",couple:"A",tone:"#8fa4bd",hair:"#2c3140"},
+      {id:"w2",name:"Wife B",label:"Wife B",group:"wife",couple:"B",tone:"#aa8d72",hair:"#402f25"},
+      {id:"w3",name:"Wife C",label:"Wife C",group:"wife",couple:"C",tone:"#8d9e77",hair:"#23351e"}
+    ],
+    capacity:2,theme:"day",validator:"jealous",scoreBase:1300,
+    rules:["Boat carries at most 2 people.","A wife cannot be with another man on a bank unless her own husband is also on that bank.","The rule is checked independently on both banks."],
+    hints:["A bank with only wives is safe.","When a husband is present, every wife there must have her own husband nearby.","Look for states with all husbands together or paired couples."]
+  },
+  {
+    id:5,title:"Night Crossing",kind:"people",desc:"A night river crossing with a limited lantern radius and 11 lantern charges.",
+    chars:[
+      {id:"g1",name:"Ari",label:"Good 1",group:"good",tone:"#4e9e8f",hair:"#24333d"},
+      {id:"g2",name:"Mina",label:"Good 2",group:"good",tone:"#7c91ad",hair:"#8a5b39"},
+      {id:"g3",name:"Noah",label:"Good 3",group:"good",tone:"#bf7954",hair:"#1f252b"},
+      {id:"b1",name:"Rex",label:"Bad 1",group:"bad",tone:"#8d9e77",hair:"#161c25"},
+      {id:"b2",name:"Vex",label:"Bad 2",group:"bad",tone:"#985b65",hair:"#352736"},
+      {id:"b3",name:"Zane",label:"Bad 3",group:"bad",tone:"#6d7898",hair:"#222633"}
+    ],
+    capacity:2,energy:11,maxEnergy:11,theme:"night",validator:"goodbad",scoreBase:1200,
+    rules:["Same safety rule as Level 1.","Each crossing consumes 1 lantern charge.","The boat light only illuminates the immediate area.","Finish before the 11 charges run out."],
+    hints:["The darkness changes visibility, not the underlying logic.","Every unnecessary return costs a charge.","Use the known safe 3+3 crossing pattern."]
+  },
+  {
+    id:6,title:"Limited Boat",kind:"people",desc:"A tighter 2+2 crossing with only five total boat movements.",
+    chars:[
+      {id:"g1",name:"Ari",label:"Good 1",group:"good",tone:"#4e9e8f",hair:"#24333d"},
+      {id:"g2",name:"Mina",label:"Good 2",group:"good",tone:"#7c91ad",hair:"#8a5b39"},
+      {id:"b1",name:"Rex",label:"Bad 1",group:"bad",tone:"#8d9e77",hair:"#161c25"},
+      {id:"b2",name:"Vex",label:"Bad 2",group:"bad",tone:"#985b65",hair:"#352736"}
+    ],
+    capacity:2,energy:5,maxEnergy:5,theme:"day",validator:"goodbad22",scoreBase:1250,
+    rules:["Two Good and two Bad People start on the left.","Boat carries at most 2 people.","Every crossing consumes 1 energy.","Complete the puzzle in five movements."],
+    hints:["The smaller population lets you finish sooner.","Think of the first trip as creating a balanced right bank.","Five crossings is enough—avoid exploratory trips."]
+  },
+  {
+    id:7,title:"Dangerous River",kind:"people",desc:"A safe-state puzzle across a river with moving hazards and deliberate safe crossing windows.",
+    chars:[
+      {id:"g1",name:"Ari",label:"Good 1",group:"good",tone:"#4e9e8f",hair:"#24333d"},
+      {id:"g2",name:"Mina",label:"Good 2",group:"good",tone:"#7c91ad",hair:"#8a5b39"},
+      {id:"g3",name:"Noah",label:"Good 3",group:"good",tone:"#bf7954",hair:"#1f252b"},
+      {id:"b1",name:"Rex",label:"Bad 1",group:"bad",tone:"#8d9e77",hair:"#161c25"},
+      {id:"b2",name:"Vex",label:"Bad 2",group:"bad",tone:"#985b65",hair:"#352736"},
+      {id:"b3",name:"Zane",label:"Bad 3",group:"bad",tone:"#6d7898",hair:"#222633"}
+    ],
+    capacity:2,theme:"day",validator:"goodbad",hazard:true,scoreBase:1400,
+    rules:["Use the same Good/Bad safety rule.","The river has moving rocks and a stronger current phase.","Crossing is allowed only during a safe window.","Hitting a hazard costs a mistake and returns the boat."],
+    hints:["Watch the river status before crossing.","Do not rush the action button during a dangerous phase.","Logic still matters more than reflexes—the safe window stays open long enough."]
+  },
+  {
+    id:8,title:"Multiple Boats",kind:"boats",desc:"Choose between a small boat and a larger boat with different capacities.",
+    chars:[
+      {id:"g1",name:"Ari",label:"Good 1",group:"good",tone:"#4e9e8f",hair:"#24333d"},
+      {id:"g2",name:"Mina",label:"Good 2",group:"good",tone:"#7c91ad",hair:"#8a5b39"},
+      {id:"g3",name:"Noah",label:"Good 3",group:"good",tone:"#bf7954",hair:"#1f252b"},
+      {id:"b1",name:"Rex",label:"Bad 1",group:"bad",tone:"#8d9e77",hair:"#161c25"},
+      {id:"b2",name:"Vex",label:"Bad 2 · Heavy",group:"bad",tone:"#985b65",hair:"#352736",heavy:true}
+    ],
+    boats:[{id:"small",name:"Small Boat",cap:2,cost:1},{id:"large",name:"Large Boat",cap:3,cost:2}],
+    theme:"day",validator:"goodbad32",scoreBase:1500,
+    rules:["Small Boat capacity: 2.","Large Boat capacity: 3 and costs 2 energy.","Heavy character Vex can only ride the Large Boat.","Good/Bad safety is checked on both banks."],
+    hints:["The large boat is more expensive, but it is the only way to move Vex.","Use capacity as a resource, not just as a limit.","A 3-person move can dramatically reduce the number of crossings."]
+  },
+  {
+    id:9,title:"Time Challenge",kind:"people",desc:"A timed crossing that combines capacity, unsafe states, and energy management.",
+    chars:[
+      {id:"g1",name:"Ari",label:"1 sec",group:"good",time:1,tone:"#4e9e8f",hair:"#24333d"},
+      {id:"g2",name:"Mina",label:"1 sec",group:"good",time:1,tone:"#7c91ad",hair:"#8a5b39"},
+      {id:"g3",name:"Noah",label:"2 sec",group:"good",time:2,tone:"#bf7954",hair:"#1f252b"},
+      {id:"b1",name:"Rex",label:"2 sec",group:"bad",time:2,tone:"#8d9e77",hair:"#161c25"},
+      {id:"b2",name:"Vex",label:"2 sec",group:"bad",time:2,tone:"#985b65",hair:"#352736"},
+      {id:"b3",name:"Zane",label:"2 sec",group:"bad",time:2,tone:"#6d7898",hair:"#222633"}
+    ],
+    capacity:2,targetTime:19,energy:11,maxEnergy:11,theme:"night",validator:"goodbad",scoreBase:1650,
+    rules:["Boat capacity: 2.","All Good/Bad safety rules remain active.","Each crossing costs 1 energy.","Finish within 19 seconds and before energy reaches zero."],
+    hints:["The time target is tight but fair.","1-second returns are valuable.","A known optimal pattern completes this puzzle at 19 seconds."]
+  },
+  {
+    id:10,title:"Ultimate Crossing",kind:"ultimate",desc:"The final test: capacity, multiple boats, restricted combinations, energy and time.",
+    chars:[
+      {id:"g1",name:"Ari",label:"Good 1",group:"good",time:1,tone:"#4e9e8f",hair:"#24333d"},
+      {id:"g2",name:"Mina",label:"Good 2",group:"good",time:1,tone:"#7c91ad",hair:"#8a5b39"},
+      {id:"g3",name:"Noah",label:"Good 3",group:"good",time:2,tone:"#bf7954",hair:"#1f252b"},
+      {id:"b1",name:"Rex",label:"Bad 1",group:"bad",time:2,tone:"#8d9e77",hair:"#161c25"},
+      {id:"b2",name:"Vex",label:"Bad 2",group:"bad",time:2,tone:"#985b65",hair:"#352736"},
+      {id:"b3",name:"Zane",label:"Bad 3 · Heavy",group:"bad",time:2,tone:"#6d7898",hair:"#222633",heavy:true}
+    ],
+    boats:[{id:"small",name:"Scout",cap:2,cost:1},{id:"large",name:"Ferry",cap:3,cost:2}],
+    capacity:2,targetTime:16,energy:7,maxEnergy:7,theme:"night",validator:"ultimate",hazard:true,scoreBase:2200,
+    rules:["Scout capacity: 2. Ferry capacity: 3.","Heavy Zane requires the Ferry.","Each crossing consumes the selected boat's energy cost.","Finish within 16 seconds and 7 energy.","All Good/Bad states must remain safe; river hazards require a safe window."],
+    hints:["The ferry should be used for a high-value group, not every trip.","Make each return trip do a specific job.","The intended route uses both boat sizes and keeps every bank safe."]
+  }
+];
+
+const saveKey="riverCrossingProgressV1";
+let save = JSON.parse(localStorage.getItem(saveKey) || "null") || {
+  unlocked:1, completed:{}, best:{}, stars:0, settings:{sound:true,music:false,motion:true}
+};
+
+let state = null;
+
+function persist(){ localStorage.setItem(saveKey,JSON.stringify(save)); updateMenuStats(); }
+function updateMenuStats(){
+  document.getElementById("menuCurrent").textContent = Math.min(10,save.unlocked);
+  document.getElementById("menuCompleted").textContent = `${Object.keys(save.completed).length}/10`;
+  document.getElementById("menuStars").textContent = save.stars;
+  setToggle("soundToggle",save.settings.sound); setToggle("musicToggle",save.settings.music); setToggle("motionToggle",save.settings.motion);
+}
+function setToggle(id,on){ const el=document.getElementById(id); if(el){ el.classList.toggle("on",!!on); } }
+function show(id){
+  ["screen-menu","screen-levels","screen-how","screen-settings","screen-ranking","screen-intro","screen-game"].forEach(x=>document.getElementById(x).classList.toggle("hidden",x!==id));
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+function toast(msg,kind="info"){
+  const t=document.getElementById("toast"); t.textContent=msg; t.className="toast show";
+  clearTimeout(toast._t); toast._t=setTimeout(()=>t.className="toast",2200);
+}
+function sound(type){
+  if(!save.settings.sound) return;
+  try{
+    const ctx = sound.ctx || (sound.ctx=new (window.AudioContext||window.webkitAudioContext)());
+    const o=ctx.createOscillator(), g=ctx.createGain(); o.connect(g); g.connect(ctx.destination);
+    const f={click:520,move:330,success:740,error:150,win:880}[type]||300;
+    o.frequency.value=f; o.type="sine"; g.gain.setValueAtTime(.0001,ctx.currentTime); g.gain.exponentialRampToValueAtTime(.04,ctx.currentTime+.01); g.gain.exponentialRampToValueAtTime(.0001,ctx.currentTime+.11); o.start(); o.stop(ctx.currentTime+.12);
+  }catch(e){}
+}
+function shuffle(a){return a.slice().sort(()=>Math.random()-.5)}
+
+function characterSVG(c, mini=false){
+  if(c.animal==="wolf"){
+    return `<svg viewBox="0 0 90 120"><path d="M19 26L13 4l20 13 12-7 14 7L77 4l-6 22c6 8 5 23-2 31-6 7-17 10-29 8-11-2-18-11-20-22-1-7 1-13 0-17Z" fill="#6f7c88"/><path d="M27 39c8-8 28-8 36 0v18H27z" fill="#adb7c0"/><circle cx="34" cy="33" r="4" fill="#ffdf74"/><circle cx="55" cy="33" r="4" fill="#ffdf74"/><path d="M38 48l7 4 7-4-7 10z" fill="#1b252d"/><path d="M26 64h14v31H26zM49 64h14v31H49z" fill="#5d6872"/><path d="M24 94h18v8H24zM47 94h18v8H47z" fill="#27313a"/></svg>`;
+  }
+  if(c.animal==="goat"){
+    return `<svg viewBox="0 0 90 120"><path d="M24 22C11 8 13 0 20 3c7 3 9 10 14 13 6-5 18-5 24 0 5-3 7-10 14-13 7-3 9 5-4 19 4 6 4 18-1 25-6 8-20 11-31 6-11-5-15-17-12-31Z" fill="#d7d0c3"/><circle cx="35" cy="34" r="3" fill="#222"/><circle cx="55" cy="34" r="3" fill="#222"/><path d="M38 47q7 6 14 0" fill="none" stroke="#55463a" stroke-width="3" stroke-linecap="round"/><path d="M27 62h13v33H27zM50 62h13v33H50z" fill="#eee7dc"/><path d="M25 94h17v8H25zM48 94h17v8H48z" fill="#6b5a4a"/></svg>`;
+  }
+  if(c.item){
+    return `<svg viewBox="0 0 90 120"><path d="M18 51q3-26 27-37 24 11 27 37l-8 33H26z" fill="#69a55a"/><path d="M30 35q12-14 30 0-4 14-15 20-11-6-15-20Z" fill="#8fc57a"/><path d="M28 80h36l-5 20H33z" fill="#4c7d40"/><path d="M33 101h24v5H33z" fill="#314e2b"/></svg>`;
+  }
+  const tone=c.tone||"#5f8499", hair=c.hair||"#2b2d34";
+  return `<svg viewBox="0 0 90 150">
+    <ellipse cx="45" cy="142" rx="24" ry="5" fill="rgba(0,0,0,.18)"/>
+    <circle cx="45" cy="29" r="17" fill="#c88d6e"/>
+    <path d="M27 31c0-21 35-25 38 2-10-9-23-12-38-2Z" fill="${hair}"/>
+    <path d="M30 48q15-8 30 0l11 48H19z" fill="${tone}"/>
+    <path d="M24 61h10v31H24zM56 61h10v31H56z" fill="${tone}" opacity=".85"/>
+    <path d="M28 95h13v32H28zM49 95h13v32H49z" fill="#354455"/>
+    <path d="M27 125h14v8H23zM48 125h14v8H44z" fill="#d7dee2"/>
+    ${c.group==="wife"?`<path d="M23 48h44l-5 12H28z" fill="rgba(255,255,255,.25)"/>`:``}
+  </svg>`;
+}
+
+function renderLevelGrid(){
+  const grid=document.getElementById("levelGrid");
+  grid.innerHTML=levels.map(l=>{
+    const best=save.best[l.id];
+    const comp=save.completed[l.id];
+    const locked=l.id>save.unlocked;
+    return `<div class="level-card ${locked?"locked":""} ${comp?"completed":""}">
+      <div class="lvl-no">Level ${l.id} ${locked?"· Locked":comp?"· Complete":""}</div>
+      <div class="lvl-title">${l.title}</div>
+      <div class="lvl-desc">${l.desc}</div>
+      <div class="lvl-foot">
+        <div class="stars">${[1,2,3].map(i=>`<span class="${comp&&comp.stars>=i?"on":""}">★</span>`).join("")}</div>
+        <div class="best">${best?`Best ${best.moves} moves`:(locked?"Locked":"Not attempted")}</div>
+      </div>
+      <button aria-label="Open Level ${l.id}" ${locked?"disabled":""} onclick="startLevel(${l.id})"></button>
+    </div>`;
+  }).join("");
+}
+
+function showIntro(id){
+  const l=levels[id-1];
+  document.getElementById("screen-intro").innerHTML=`<div class="section-head"><div><div class="lvl-no">Level ${l.id}</div><h2>${l.title}</h2><p>${l.desc}</p></div><button class="ghost-btn" onclick="show('screen-levels')">Back</button></div>
+  <div class="how">
+    <div class="how-card">
+      <div class="lvl-no">Briefing</div>
+      <h3 style="font-size:28px;margin:8px 0">Get everyone safely across.</h3>
+      <p>${l.kind==="bridge"?"The bridge is the puzzle. Every second matters.":l.kind==="farmer"?"The river is simple. The state restrictions are not.":"Read the state rules before making your first move."}</p>
+      <div class="intro-rules">${l.rules.map(x=>`<div>${x}</div>`).join("")}</div>
+      <div class="modal-actions"><button class="primary-btn" onclick="beginGame(${id})">START LEVEL</button></div>
+    </div>
+  </div>`;
+  show("screen-intro");
+}
+
+function startLevel(id){ if(id>save.unlocked)return; showIntro(id); }
+function freshState(l){
+  const s={
+    level:l,moved:0,mistakes:0,hints:0,startedAt:performance.now(),timer:null,
+    elapsedSeconds:0,puzzleTime:0,
+    side:new Map(l.chars.map(c=>[c.id,0])),boatSide:0,selected:new Set(),terminal:false,
+    energy:l.energy??null, selectedBoat:l.boats?l.boats[0].id:null, hazardPhase:0, hazardSafe:true,
+    history:[]
+  };
+  if(l.kind==="bridge") s.side=new Map(l.chars.map(c=>[c.id,0]));
+  return s;
+}
+function beginGame(id){
+  const l=levels[id-1]; state=freshState(l); renderGame(); show("screen-game"); bindStableGameInteractions();
+  state.timer=setInterval(()=>{
+    if(!state||state.terminal)return;
+    state.elapsedSeconds=Math.floor((performance.now()-state.startedAt)/1000);
+    if(l.hazard){state.hazardPhase=(state.hazardPhase+1)%8;state.hazardSafe=[0,1,2,6,7].includes(state.hazardPhase);}
+    renderGame();
+  },1000);
+}
+
+function bindStableGameInteractions(){
+  const gameScreen=document.getElementById("screen-game");
+  if(!gameScreen || gameScreen.dataset.bound==="1") return;
+  gameScreen.dataset.bound="1";
+
+  gameScreen.addEventListener("click",(e)=>{
+    const charEl=e.target.closest(".character");
+    if(charEl){
+      const id=charEl.getAttribute("data-char-id");
+      if(id && state && !state.terminal) toggleChar(id);
+      return;
+    }
+    const action=e.target.closest("[data-game-action]");
+    if(!action || !state || state.terminal) return;
+    const act=action.getAttribute("data-game-action");
+    if(act==="cross") cross();
+    else if(act==="restart") restartLevel();
+    else if(act==="quit") leaveGame();
+  });
+}
+
+function renderGame(){
+  const s=state,l=s.level;
+  const left=l.chars.filter(c=>s.side.get(c.id)===0), right=l.chars.filter(c=>s.side.get(c.id)===1);
+  const capacity=getCapacity();
+  const selected=[...s.selected].map(id=>l.chars.find(c=>c.id===id)).filter(Boolean);
+  const isNight=l.theme==="night";
+  const boardClass=`board ${isNight?"night":""}`;
+  const hazardText=l.hazard?(s.hazardSafe?`Current stable · SAFE WINDOW`:`Current surging · WAIT`):"";
+  const energyText=s.energy==null?"—":`${s.energy}/${l.maxEnergy||s.energy}`;
+  const timeText=`${s.elapsedSeconds}s`;
+  document.getElementById("screen-game").innerHTML=`
+  <div class="section-head"><div><div class="lvl-no">Level ${l.id}</div><h2>${l.title}</h2><p>${l.desc}</p></div><button class="ghost-btn" onclick="leaveGame()">Levels</button></div>
+  <div class="game-wrap">
+   <div class="game-main">
+    <div class="game-head">
+      <div><h2>${l.kind==="bridge"?"Night Bridge":"River Crossing"}</h2><p>${l.kind==="bridge"?"Keep the torch moving intelligently.":"Select characters on the active bank, then cross."}</p></div>
+      <div class="metric-row">
+        <div class="metric"><b>${s.moved}</b><small>Moves</small></div>
+        <div class="metric"><b>${timeText}</b><small>${l.targetTime?"Time":"Session"}</small></div>
+        <div class="metric"><b>${energyText}</b><small>${l.energy==null?"Energy":"Resource"}</small></div>
+      </div>
+    </div>
+    <div class="${boardClass}">
+      <div class="sky"></div><div class="stars-bg"></div><div class="sun"></div><div class="moon"></div><div class="trees"></div>
+      <div class="bank left"></div><div class="bank right"></div><div class="river"></div>
+      <div class="shore left"></div><div class="shore right"></div>
+      ${l.hazard?`<div class="hazard-bar">${hazardText}</div>`:""}
+      ${isNight?`<div class="light-ring" id="lightRing" style="left:${s.boatSide?74:26}%;top:66%"></div>`:""}
+      ${l.hazard?`<div style="position:absolute;left:31%;right:31%;bottom:18%;z-index:10;display:flex;justify-content:space-between;pointer-events:none"><div style="width:26px;height:20px;background:#5f6a70;border-radius:8px;transform:rotate(-18deg);box-shadow:75px 16px 0 #6e787d,160px -12px 0 #59656a;"></div><div></div></div>`:""}
+      <div class="boat ${l.boats?(state.selectedBoat==="large"?"large":"small"):""}" style="left:${s.boatSide?69:29}%;bottom:${l.kind==="bridge"? "30%":"22%"}%">
+        <div class="rim"></div>
+      </div>
+      <div class="boat-passengers"></div>
+      <div class="char-layer">
+       ${renderCharacters(left,0,l)}${renderCharacters(right,1,l)}
+      </div>
+      <div class="board-overlay"></div>
+    </div>
+   </div>
+   <aside class="game-side">
+      ${l.boats?`<div class="side-section"><h3>Choose Boat</h3><div class="controls">${l.boats.map(b=>`<button class="${state.selectedBoat===b.id?"primary-btn":"ghost-btn"}" onclick="selectBoat('${b.id}')">${b.name} · cap ${b.cap} · ${b.cost} energy</button>`).join("")}</div></div>`:""}
+      <div class="side-section"><h3>${l.kind==="bridge"?"Torch & Crossing":"Current State"}</h3><p>${currentExplanation(l)}</p></div>
+      <div class="side-section"><h3>Selection</h3><div class="selected-list">${selected.length?selected.map(c=>`<span class="pill">${c.label}</span>`).join(""):`<span style="color:var(--muted);font-size:12px">Nothing selected</span>`}</div>
+      ${(l.chars.some(c=>c.group==="good") && l.chars.some(c=>c.group==="bad")) ? `<div class="team-legend"><div class="legend-item"><span class="legend-dot legend-good"></span> Good People</div><div class="legend-item"><span class="legend-dot legend-bad"></span> Bad People</div></div>` : ""}</div>
+      ${l.energy!=null?`<div class="side-section"><h3>${l.kind==="night"?"Lantern Charges":"Boat Energy"}</h3><div class="energy-track"><div class="energy-fill" style="width:${Math.max(0,(s.energy/l.maxEnergy)*100)}%"></div></div><p style="margin-top:8px">${s.energy} remaining</p></div>`:""}
+      <div class="side-section"><h3>Hints</h3><p>${l.hints[Math.min(s.hints,2)]}</p><div style="margin-top:9px"><button class="ghost-btn" onclick="useHint()">${s.hints>=3?"Hints exhausted":`Reveal next hint (${s.hints+1}/3)`}</button></div></div>
+      <div class="side-section controls">
+        <button class="primary-btn" data-game-action="cross">CROSS RIVER</button>
+        <button class="ghost-btn" data-game-action="restart">RESTART</button>
+        <button class="danger-btn" data-game-action="quit">QUIT TO LEVELS</button>
+      </div>
+   </aside>
+  </div>`;
+}
+function currentExplanation(l){
+  if(l.kind==="bridge") return "Only two people can be on the bridge at once. A return trip is often the key to optimizing the total time.";
+  if(l.validator==="goodbad"||l.validator==="goodbad32"||l.validator==="goodbad22"||l.validator==="ultimate") return `Boat is on the ${state.boatSide?"right":"left"} bank. Every bank must satisfy the Good/Bad rule.`;
+  if(l.validator==="farmer") return "The farmer must be present whenever a dangerous pair would otherwise be left together.";
+  if(l.validator==="jealous") return "Check wives against every other man on both banks, not just the people in the boat.";
+  return "Every action is checked by the shared state engine.";
+}
+function getCapacity(){
+  const l=state.level;
+  if(l.boats){return l.boats.find(b=>b.id===state.selectedBoat).cap;}
+  return l.capacity;
+}
+function renderCharacters(chars,bank,l){
+  if(!chars.length)return "";
+  return chars.map((c,i)=>{
+    const compact = window.matchMedia && window.matchMedia("(max-width:760px)").matches;
+    const step = compact ? 7.5 : 8.6;
+    const start = compact ? 1.5 : 3;
+    const x = bank===0 ? start+i*step : (compact ? 69 : 67)+i*step;
+    const bottom = compact ? 9 + (i%2)*7 : 10 + (i%2)*8;
+    const teamClass = c.group==="good" ? "good-character" : c.group==="bad" ? "bad-character" : "";
+    const badge = c.group==="good" ? '<div class="team-badge">GOOD</div>' : c.group==="bad" ? '<div class="team-badge">BAD</div>' : "";
+    return `<div class="character ${teamClass} ${state.selected.has(c.id)?"selected":""}" data-char-id="${c.id}" role="button" tabindex="0" aria-label="${c.label}" style="left:${x}%;bottom:${bottom}%">
+      <div class="tag">${c.label}</div><div class="char-svg">${characterSVG(c)}</div>${badge}
+    </div>`;
+  }).join("");
+}
+function toggleChar(id){
+  if(state.terminal)return;
+  const c=state.level.chars.find(x=>x.id===id);
+  if(state.side.get(id)!==state.boatSide){toast("That character is on the opposite bank.");sound("error");return;}
+  if(state.level.kind==="bridge"){
+    if(state.selected.has(id))state.selected.delete(id); else if(state.selected.size<2)state.selected.add(id); else {toast("Maximum two people on the bridge.");sound("error");}
+  }else{
+    if(state.selected.has(id)) state.selected.delete(id);
+    else if(state.selected.size<getCapacity()) state.selected.add(id);
+    else {toast(`This boat can carry ${getCapacity()} people.`);sound("error");}
+  }
+  sound("click"); renderGame();
+}
+function selectBoat(id){
+  if(!state.level.boats)return;
+  state.selectedBoat=id; state.selected.clear(); sound("click"); renderGame();
+}
+function useHint(){
+  if(state.hints>=3){toast("All three hints are already revealed.");return;}
+  state.hints++; sound("click"); renderGame();
+}
+function bankMask(side){return state.level.chars.filter(c=>state.side.get(c.id)===side);}
+function validateBank(chars){
+  const v=state.level.validator;
+  if(v==="goodbad"||v==="goodbad22"||v==="goodbad32"||v==="ultimate"){
+    const g=chars.filter(c=>c.group==="good").length,b=chars.filter(c=>c.group==="bad").length;
+    return g===0||g>=b;
+  }
+  if(v==="farmer"){
+    const hasFarmer=chars.some(c=>c.id==="farmer");
+    const ids=new Set(chars.map(c=>c.id));
+    if(!hasFarmer && ids.has("wolf")&&ids.has("goat")) return false;
+    if(!hasFarmer && ids.has("goat")&&ids.has("cabbage")) return false;
+    return true;
+  }
+  if(v==="jealous"){
+    const wives=chars.filter(c=>c.group==="wife"), husbands=chars.filter(c=>c.group==="husband");
+    if(!husbands.length)return true;
+    const husbandSet=new Set(husbands.map(c=>c.couple));
+    for(const w of wives){
+      const otherMan=husbands.some(h=>h.couple!==w.couple);
+      if(otherMan && !husbandSet.has(w.couple)) return false;
+    }
+    return true;
+  }
+  return true;
+}
+function validatePeopleState(){
+  return validateBank(bankMask(0)) && validateBank(bankMask(1));
+}
+function cross(){
+  if(state.terminal)return;
+  const l=state.level, chosen=l.chars.filter(c=>state.selected.has(c.id));
+  if(l.kind==="bridge") return bridgeCross(chosen);
+  if(!chosen.length){toast("Select at least one character.");sound("error");return;}
+  if(l.validator==="farmer" && !chosen.some(c=>c.id==="farmer")){
+    toast("The Farmer must be in the boat."); sound("error"); return;
+  }
+  if(l.validator==="farmer" && chosen.length>2){
+    toast("The Farmer can take only one passenger."); sound("error"); return;
+  }
+  if(chosen.length>getCapacity()){toast(`Capacity exceeded. Maximum ${getCapacity()}.`);sound("error");return;}
+  if(chosen.some(c=>c.heavy) && state.selectedBoat!=="large" && l.boats){toast("The heavy character requires the Large Boat.");sound("error");return;}
+  if(l.hazard && !state.hazardSafe){state.mistakes++;toast("The current is too strong. Wait for the safe window.");sound("error");renderGame();return;}
+  const prev=new Map(state.side); chosen.forEach(c=>state.side.set(c.id,state.boatSide?0:1));
+  if(!validatePeopleState()){
+    state.side=prev; state.mistakes++; toast("That move creates an unsafe bank state."); sound("error"); renderGame(); return;
+  }
+  state.boatSide=state.boatSide?0:1; state.moved++; state.selected.clear();
+  if(l.targetTime){
+    const travelCost=Math.max(...chosen.map(c=>c.time||1));
+    state.puzzleTime += travelCost;
+  }
+  if(l.energy!=null){const cost=l.boats?l.boats.find(b=>b.id===state.selectedBoat).cost:1; state.energy-=cost;}
+  sound("move"); renderGame();
+  if(l.targetTime && state.puzzleTime>l.targetTime){lose(`The time limit of ${l.targetTime} seconds was exceeded.`);return;}
+  if(l.energy!=null && state.energy<0){lose("The boat ran out of energy.");return;}
+  if(l.energy!=null && state.energy===0 && !isWin()){lose("No energy remains before everyone is across.");return;}
+  if(isWin()) win();
+}
+function bridgeCross(chosen){
+  if(!chosen.length||chosen.length>2){toast("Choose one or two people.");sound("error");return;}
+  // On the bridge, the "boatSide" is treated as the torch side.
+  const times=chosen.map(c=>c.time||1);
+  const onTorchSide=chosen.every(c=>state.side.get(c.id)===state.boatSide);
+  if(!onTorchSide){toast("Everyone in the crossing pair must be on the torch side.");sound("error");return;}
+  const cost=Math.max(...times);
+  state.puzzleTime=(state.puzzleTime||0)+cost;
+  chosen.forEach(c=>state.side.set(c.id,state.boatSide?0:1));
+  state.boatSide=state.boatSide?0:1; state.moved++; state.selected.clear();
+  sound("move"); renderGame();
+  if(state.puzzleTime>state.level.targetTime){lose("The bridge crossing exceeded the 19-second target.");return;}
+  if(isWin())win();
+}
+function isWin(){
+  const l=state.level;
+  if(l.kind==="bridge") return l.chars.every(c=>state.side.get(c.id)===1);
+  return l.chars.every(c=>state.side.get(c.id)===1);
+}
+function calculateStars(){
+  const l=state.level;
+  let stars=3;
+  const inefficient=state.moved > (l.kind==="bridge"?5:(l.energy?l.energy+1:11));
+  if(state.mistakes>0) stars--;
+  if(state.hints>0) stars--;
+  if(inefficient) stars--;
+  if(l.targetTime && state.puzzleTime>l.targetTime-2) stars=Math.min(stars,2);
+  if(l.energy!=null && state.energy<=1) stars=Math.min(stars,2);
+  return Math.max(1,stars);
+}
+function win(){
+  if(state.terminal)return; state.terminal=true; clearInterval(state.timer); sound("win");
+  const l=state.level, stars=calculateStars(), old=save.completed[l.id];
+  if(!old || stars>old.stars){save.stars += old?stars-old.stars:stars; save.completed[l.id]={stars,moves:state.moved,time:state.elapsedSeconds,hints:state.hints};}
+  const best=save.best[l.id];
+  if(!best || state.moved<best.moves || (state.moved===best.moves && state.elapsedSeconds<best.time)) save.best[l.id]={moves:state.moved,time:state.elapsedSeconds};
+  if(l.id===save.unlocked && l.id<10) save.unlocked++;
+  persist();
+  showModal(true);
+}
+function lose(reason){
+  if(state.terminal)return; state.terminal=true; clearInterval(state.timer); sound("error");
+  showModal(false,reason);
+}
+function showModal(success,reason=""){
+  const l=state.level;
+  document.getElementById("modal").classList.remove("hidden");
+  document.getElementById("modal").innerHTML=success?`
+    <div class="modal-card"><div class="lvl-no">Level ${l.id} complete</div><h2>LEVEL COMPLETE</h2><p>${l.title} solved. This score will be saved for <strong>${escapeHtml(getPlayerName())}</strong>.</p>
+    <div class="score-grid"><div class="score-box"><b>${state.elapsedSeconds}s</b><small>Time</small></div><div class="score-box"><b>${state.moved}</b><small>Moves</small></div><div class="score-box"><b>${calculateStars()} / 3</b><small>Stars</small></div></div>
+    <div class="modal-actions"><button class="primary-btn" onclick="submitScoreAndContinue()">SAVE & CONTINUE</button><button class="ghost-btn" onclick="closeModal();restartLevel()">PLAY AGAIN</button></div></div>`:
+    `<div class="modal-card"><div class="lvl-no">Level ${l.id}</div><h2>GAME OVER</h2><p>${reason}</p>
+    <div class="score-grid"><div class="score-box"><b>${state.moved}</b><small>Moves</small></div><div class="score-box"><b>${state.hints}</b><small>Hints used</small></div><div class="score-box"><b>${l.energy!=null?state.energy:"—"}</b><small>Energy left</small></div></div>
+    <div class="modal-actions"><button class="primary-btn" onclick="closeModal();restartLevel()">TRY AGAIN</button><button class="ghost-btn" onclick="useHintFromModal()">VIEW HINT</button><button class="ghost-btn" onclick="closeModal();show('screen-levels')">LEVEL SELECT</button></div></div>`;
+}
+function closeModal(){document.getElementById("modal").classList.add("hidden");document.getElementById("modal").innerHTML="";}
+function useHintFromModal(){closeModal();state.terminal=false;state.hints=Math.min(3,state.hints+1);renderGame();}
+
+function nextOrLevels(){closeModal(); if(state.level.id<10 && save.unlocked>=state.level.id+1) showIntro(state.level.id+1); else show("screen-levels");}
+function restartLevel(){ if(state?.timer) clearInterval(state.timer); closeModal(); beginGame(state.level.id);}
+function leaveGame(){if(state?.timer)clearInterval(state.timer);state=null;renderLevelGrid();show("screen-levels");}
+function finalVictory(){
+  document.getElementById("modal").classList.remove("hidden");
+  document.getElementById("modal").innerHTML=`<div class="modal-card"><div class="lvl-no">Final Test Complete</div><h2>YOU MASTERED THE CROSSING!</h2><p>All ten logic challenges are complete. Your local profile now records the full run.</p>
+  <div class="score-grid"><div class="score-box"><b>${Object.keys(save.completed).length}</b><small>Total levels</small></div><div class="score-box"><b>${save.stars}</b><small>Total stars</small></div><div class="score-box"><b>10 / 10</b><small>Mastery</small></div></div>
+  <div class="modal-actions"><button class="primary-btn" onclick="closeModal();show('screen-levels')">BACK TO LEVELS</button><button class="ghost-btn" onclick="closeModal();beginGame(10);show('screen-game')">PLAY AGAIN</button></div></div>`;
+}
+function nextOrLevels(){
+  const id=state.level.id; closeModal();
+  if(id===10){finalVictory();return;}
+  if(save.unlocked>=id+1){showIntro(id+1);} else show("screen-levels");
+}
+
+
+
+const playerIdKey="riverCrossingPlayerId";
+const playerNameKey="riverCrossingPlayerName";
+
+function getPlayerId(){
+  let id=localStorage.getItem(playerIdKey);
+  if(!id){
+    id=(crypto.randomUUID ? crypto.randomUUID() : "p-"+Date.now()+"-"+Math.random().toString(36).slice(2));
+    localStorage.setItem(playerIdKey,id);
+  }
+  return id;
+}
+function getPlayerName(){ return (localStorage.getItem(playerNameKey)||"").trim(); }
+function setPlayerName(name){
+  localStorage.setItem(playerNameKey,name.trim().slice(0,24));
+  updatePlayerNameUI();
+}
+function updatePlayerNameUI(){
+  const name=getPlayerName()||"Not set";
+  const el=document.getElementById("playerNameSettingValue");
+  if(el) el.textContent=name;
+  const menu=document.getElementById("menuPlayerName");
+  if(menu) menu.textContent=name;
+}
+function openPlayerSetup(forceChange=false){
+  const modal=document.getElementById("playerSetupModal");
+  const current=getPlayerName();
+  modal.classList.remove("hidden");
+  modal.innerHTML=`<div class="modal-card">
+    <div class="lvl-no">${forceChange?"Profile":"First visit"}</div>
+    <h2>${forceChange?"Change player name":"Welcome to River Crossing"}</h2>
+    <p>${forceChange?"Update the name shown on the global leaderboard.":"Choose a display name for the global leaderboard. This device will remember it automatically."}</p>
+    <div class="player-setup-form">
+      <label for="playerSetupInput">Display name</label>
+      <input id="playerSetupInput" maxlength="24" autocomplete="nickname" value="${escapeHtml(current)}" placeholder="e.g. Minhajul">
+      <div style="font-size:11px;color:var(--muted)">2–24 characters</div>
+    </div>
+    <div class="modal-actions">
+      <button class="primary-btn" id="savePlayerNameBtn">${forceChange?"SAVE NAME":"CONTINUE"}</button>
+      ${forceChange?'<button class="ghost-btn" id="cancelPlayerNameBtn">CANCEL</button>':""}
+    </div>
+  </div>`;
+  const input=document.getElementById("playerSetupInput");
+  setTimeout(()=>input?.focus(),50);
+  document.getElementById("savePlayerNameBtn").onclick=()=>{
+    const value=(input?.value||"").trim().replace(/\s+/g," ");
+    if(value.length<2){toast("Choose a name with at least 2 characters.");sound("error");return;}
+    setPlayerName(value);
+    modal.classList.add("hidden"); modal.innerHTML="";
+    sound("success");
+    if(forceChange) toast("Player name updated.");
+  };
+  const cancel=document.getElementById("cancelPlayerNameBtn");
+  if(cancel) cancel.onclick=()=>{modal.classList.add("hidden");modal.innerHTML="";};
+  input?.addEventListener("keydown",e=>{if(e.key==="Enter")document.getElementById("savePlayerNameBtn")?.click();});
+}
+
+let currentRankingMode = "normal";
+let rankingCache = [];
+
+function formatTime(totalSeconds){
+  totalSeconds = Number(totalSeconds||0);
+  const m=Math.floor(totalSeconds/60), s=totalSeconds%60;
+  return `${m}m ${String(s).padStart(2,"0")}s`;
+}
+async function submitScoreAndContinue(){
+  const name=getPlayerName();
+  if(name.length<2){openPlayerSetup(true);return;}
+  const payload={
+    playerId:getPlayerId(),
+    playerName:name.slice(0,24),
+    levelId:state.level.id,
+    hints:state.hints,
+    time:state.elapsedSeconds,
+    moves:state.moved,
+    stars:calculateStars()
+  };
+  try{
+    const res=await fetch("/api/submit-score",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+    const data=await res.json().catch(()=>({}));
+    if(!res.ok) throw new Error(data.error||"Could not save score");
+    setPlayerName(payload.playerName);
+    closeModal(); 
+    if(state.level.id===10){finalVictory();} else if(save.unlocked>=state.level.id+1){showIntro(state.level.id+1);} else {renderLevelGrid();show("screen-levels");}
+    toast("Score saved to the global leaderboard.");
+  }catch(err){
+    toast("Score could not be saved. Check your deployment/database settings.");
+    sound("error");
+  }
+}
+function openRanking(){
+  show("screen-ranking");
+  loadRanking(currentRankingMode);
+}
+function setRankingMode(mode){
+  currentRankingMode=mode;
+  document.getElementById("rankNormalBtn").className=mode==="normal"?"primary-btn":"ghost-btn";
+  document.getElementById("rankMoveBtn").className=mode==="move"?"primary-btn":"ghost-btn";
+  renderRanking(rankingCache);
+}
+async function loadRanking(mode="normal"){
+  currentRankingMode=mode;
+  const status=document.getElementById("rankingStatus"), body=document.getElementById("rankingBody");
+  status.textContent="Loading leaderboard…"; body.innerHTML="";
+  try{
+    const res=await fetch(`/api/leaderboard?mode=${encodeURIComponent(mode)}`);
+    const data=await res.json();
+    if(!res.ok) throw new Error(data.error||"Unable to load");
+    rankingCache=data.players||[];
+    renderRanking(rankingCache);
+    status.textContent=`Updated ${new Date().toLocaleTimeString()} · Showing top ${Math.min(100,rankingCache.length)} players`;
+  }catch(err){
+    status.textContent="Leaderboard is not connected yet. Add the Supabase environment variables in Vercel and deploy again.";
+    body.innerHTML=`<tr><td colspan="7" style="padding:28px;text-align:center;color:var(--muted)">No online ranking data available.</td></tr>`;
+  }
+}
+function renderRanking(players){
+  const body=document.getElementById("rankingBody");
+  if(!body)return;
+  if(!players.length){
+    body.innerHTML='<tr><td colspan="7" style="padding:28px;text-align:center;color:var(--muted)">No scores yet. Be the first player.</td></tr>';
+    return;
+  }
+  body.innerHTML=players.slice(0,100).map((p,i)=>`
+    <tr style="border-top:1px solid var(--line)">
+      <td style="padding:12px 10px;font-weight:850">${i+1}</td>
+      <td style="padding:12px 10px;font-weight:750">${escapeHtml(p.playerName)} ${p.playerId===getPlayerId()?'<span class="pill" style="margin-left:5px">YOU</span>':''}</td>
+      <td style="padding:12px 10px;text-align:right">${p.levels}</td>
+      <td style="padding:12px 10px;text-align:right">${p.hints}</td>
+      <td style="padding:12px 10px;text-align:right">${formatTime(p.time)}</td>
+      <td style="padding:12px 10px;text-align:right">${p.moves}</td>
+      <td style="padding:12px 10px;text-align:right;color:var(--gold)">${p.stars}</td>
+    </tr>`).join("");
+}
+function escapeHtml(value){
+  return String(value??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[ch]));
+}
+
+// Navigation
+document.getElementById("playBtn").onclick=()=>startLevel(save.unlocked);
+document.getElementById("levelsBtn").onclick=()=>{renderLevelGrid();show("screen-levels")};
+document.getElementById("howBtn").onclick=()=>show("screen-how");
+document.getElementById("navLevels").onclick=()=>{renderLevelGrid();show("screen-levels")};
+document.getElementById("navHow").onclick=()=>show("screen-how");
+document.getElementById("navRanking").onclick=()=>openRanking();
+document.getElementById("rankingBack").onclick=()=>show("screen-menu");
+document.getElementById("rankNormalBtn").onclick=()=>loadRanking("normal");
+document.getElementById("rankMoveBtn").onclick=()=>loadRanking("move");
+document.getElementById("rankRefreshBtn").onclick=()=>loadRanking(currentRankingMode);
+document.getElementById("navSettings").onclick=()=>{updatePlayerNameUI();show("screen-settings");};
+document.getElementById("levelsBack").onclick=()=>show("screen-menu");
+document.getElementById("howBack").onclick=()=>show("screen-menu");
+document.getElementById("settingsBack").onclick=()=>show("screen-menu");
+document.getElementById("soundToggle").onclick=()=>{save.settings.sound=!save.settings.sound;persist()};
+document.getElementById("musicToggle").onclick=()=>{save.settings.music=!save.settings.music;persist();toast(save.settings.music?"Ambient music enabled":"Ambient music disabled")};
+document.getElementById("motionToggle").onclick=()=>{save.settings.motion=!save.settings.motion;document.documentElement.style.setProperty("--motion",save.settings.motion?"1":"0");persist()};
+document.getElementById("changePlayerName").onclick=()=>openPlayerSetup(true);
+document.getElementById("resetProgress").onclick=()=>{
+  if(confirm("Reset all progress and local scores?")){
+    save={unlocked:1,completed:{},best:{},stars:0,settings:{sound:true,music:false,motion:true}}; persist(); renderLevelGrid(); toast("Progress reset.");
+  }
+};
+document.addEventListener("keydown",e=>{
+  if(e.key==="r"||e.key==="R"){ if(state&&!document.getElementById("screen-game").classList.contains("hidden")) restartLevel(); }
+  if(e.key==="Escape"){ if(state) leaveGame(); else show("screen-menu"); }
+});
+updateMenuStats(); updatePlayerNameUI(); renderLevelGrid();
+if(!getPlayerName()) openPlayerSetup(false);
+
+document.addEventListener("keydown",(e)=>{
+  if(!state || state.terminal) return;
+  const el=document.activeElement;
+  if(el?.classList?.contains("character") && (e.key==="Enter" || e.key===" ")){
+    e.preventDefault();
+    const id=el.getAttribute("data-char-id");
+    if(id) toggleChar(id);
+  }
+});
+
+</script>
+</body>
+</html>
